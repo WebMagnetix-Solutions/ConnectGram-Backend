@@ -1,7 +1,15 @@
-import { Schema, model } from "mongoose";
+import mongoose, { Schema, model } from "mongoose";
 
 const userModel = new Schema(
     {
+        pic: {
+            type: String,
+            default: "https://res.cloudinary.com/dmm0xoddf/image/upload/icgcvp0qeeg8ltqnn8k6.webp"
+        },
+        founder: {
+            type: Boolean,
+            default: false
+        },
         name: {
             type: String,
             required: true
@@ -17,7 +25,17 @@ const userModel = new Schema(
         password: {
             type: String,
             required: true
-        }
+        },
+        followers: [
+            {
+                type: mongoose.Types.ObjectId
+            }
+        ],
+        following: [
+            {
+                type: mongoose.Types.ObjectId
+            }
+        ]
     }, {
         timestamps: true
     }

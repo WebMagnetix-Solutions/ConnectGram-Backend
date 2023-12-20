@@ -5,5 +5,7 @@ const app = Router()
 
 app.post("/signup", userController.signupUser)
 app.get("/login", userController.userLogin)
+app.get("/users", userController.getUsers)
+app.get("/getMe/:id", userController.getMe)
 
 export default app

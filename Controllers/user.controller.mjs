@@ -56,8 +56,11 @@ const signupUser = async (req, res) => {
             if (findUser) {
                 createError(res, 409, "Email already exist")
             } else {
-                userData.password = await bcrypt.hash(userData.password,10)
+                userData.password = await bcrypt.hash(userData.password, 10)
+                const founder = await userDB.findOne({ founder: true })
+                userData.following = [founder._id]
                 const response = await userDB.create(userData)
+                await userDB.updateOne({founder: true},{$push:{followers:response._id}})
                 response.password = ""
                 const token = jwt.sign({ sub: response._id }, process.env.JWT_KEY, { expiresIn: "7d" })
                 res.status(201).json(
@@ -71,6 +74,35 @@ const signupUser = async (req, res) => {
         }
     } catch (err) {
         console.log(err);
+        internalServerError(res)
+    }
+}
+
+const getUsers = async (req, res) => {
+    try {
+        const { prefix } = req.query
+        let obj;
+        if (!prefix) {
+            obj = {}
+        } else {
+            obj = {
+                $or: [{name: { $regex: prefix, $options: "i" }, username: { $regex: prefix, $options: "i" }}]
+            }
+        }
+
+        const response = await userDB.find(obj)
+        res.status(200).json({result: response})
+    } catch (err) {
+        internalServerError(res)
+    }
+}
+
+const getMe = async (req, res) => {
+    try {
+        const { id } = req.params
+        const response = await userDB.findOne({_id: id})
+        res.status(200).json({result: response})
+    } catch (err) {
         internalServerError(res)
     }
 }
@@ -93,5 +125,7 @@ const internalServerError = (res) => {
 
 export default {
     userLogin,
-    signupUser
+    signupUser,
+    getUsers,
+    getMe
 }
