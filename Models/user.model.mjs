@@ -10,9 +10,16 @@ const userModel = new Schema(
             type: Boolean,
             default: false
         },
+        verified: {
+            type: Boolean,
+            default: false
+        },
         name: {
             type: String,
             required: true
+        },
+        bio: {
+            type: String  
         },
         username: {
             type: String,

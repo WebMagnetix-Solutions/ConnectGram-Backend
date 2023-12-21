@@ -2,13 +2,16 @@ import { userDB } from "../Models/user.model.mjs"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import env from "dotenv"
+import mongoose from "mongoose"
+import {v4 as uuidv4} from "uuid"
+import { cloudinaryUpload } from "../Utils/Cloudinary.mjs"
 
 env.config()
 
 const userLogin = async (req, res) => {
     try {
         const { username, password } = req.query
-        console.log(req.query);
+        
         const user = await userDB.findOne(
             {
                 username: username
@@ -86,10 +89,9 @@ const getUsers = async (req, res) => {
             obj = {}
         } else {
             obj = {
-                $or: [{name: { $regex: prefix, $options: "i" }, username: { $regex: prefix, $options: "i" }}]
+                $or: [{username: { $regex: prefix, $options: "i"}},{name: { $regex: prefix, $options: "i"}}]
             }
         }
-
         const response = await userDB.find(obj)
         res.status(200).json({result: response})
     } catch (err) {
@@ -100,7 +102,79 @@ const getUsers = async (req, res) => {
 const getMe = async (req, res) => {
     try {
         const { id } = req.params
-        const response = await userDB.findOne({_id: id})
+        const result = await userDB.aggregate(
+            [
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(id)
+                    }
+                }, {
+                    $lookup: {
+                        from: "posts",
+                        localField: "_id",
+                        foreignField: "posted_by",
+                        as: "posts"
+                    }
+                }
+            ]
+        )
+        res.status(200).json({result: result[0]})
+    } catch (err) {
+        internalServerError(res)
+    }
+}
+
+const profileEdit = async (req, res) => {
+    try {
+        const { id, ...rest } = req.body
+        const fileBlob = req.files
+        if (rest.username) {
+            const findUser = await userDB.findOne({ username: rest.username })
+            if (findUser) {
+                return createError(res, 409, "Username already exist")
+            }
+        }
+        if (fileBlob) {
+            const file = fileBlob.pic
+            const file_type = file.mimetype.split("/")[0]
+            const ext = file.mimetype.split("/")[1]
+            const file_id = uuidv4()
+            file.mv(`./Public/Images/${file_id}.${ext}`, async (err, resp) => {
+                if (err) createError(res, 500, "Internal server error")
+                const response = await cloudinaryUpload(`./Public/Images/${file_id}.${ext}`, file_type)
+                rest.pic = response
+                await userDB.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: rest })
+            })
+        } else {
+            await userDB.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: rest })   
+        }
+        const result = await userDB.aggregate(
+            [
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(id)
+                    }
+                }, {
+                    $lookup: {
+                        from: "posts",
+                        localField: "_id",
+                        foreignField: "posted_by",
+                        as: "posts"
+                    }
+                }
+            ]
+        )
+        res.status(200).json({result: result[0]})
+    } catch (err) {
+        internalServerError(res)
+    }
+}
+
+const getSuggestions = async (req, res) => {
+    try {
+        const { user_id } = req.params
+        const findFollowers = await userDB.findOne({_id: user_id})
+        const response = await userDB.find({_id: { $in: findFollowers.followers }})
         res.status(200).json({result: response})
     } catch (err) {
         internalServerError(res)
@@ -127,5 +201,7 @@ export default {
     userLogin,
     signupUser,
     getUsers,
-    getMe
+    getMe,
+    profileEdit,
+    getSuggestions
 }

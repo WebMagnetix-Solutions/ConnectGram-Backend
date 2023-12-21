@@ -23,9 +23,9 @@ export const cloudinaryUpload = async (path, type) => {
     }
 }
 
-export const cloudinaryDelete = async (array) => {
+export const cloudinaryDelete = async (array, type) => {
     try {
-        const response = await cloudinary.api.delete_resources(array, { type: 'upload', resource_type: 'image' })
+        const response = await cloudinary.api.delete_resources(array, { type: 'upload', resource_type: type })
         return response
     } catch (err) {
         console.log(err)

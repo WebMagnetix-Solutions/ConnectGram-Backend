@@ -16,9 +16,19 @@ const postModel = new Schema(
         },
         tags: [
             {
-                type: Array,
+                type: String,
                 required: true
             }
+        ],
+        likes: [
+            {
+              type: mongoose.Types.ObjectId
+            }  
+        ],
+        saved: [
+            {
+                type: mongoose.Types.ObjectId
+            } 
         ],
         location: {
             type: String,
