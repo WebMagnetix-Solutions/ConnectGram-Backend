@@ -4,6 +4,7 @@ import { cloudinaryDelete, cloudinaryUpload } from "../Utils/Cloudinary.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { userDB } from "../Models/user.model.mjs";
 import { commentDB } from "../Models/comments.model.mjs";
+import { createError, internalServerError } from "../Utils/Errors.mjs";
 
 const createPost = async (req, res) => {
     try {
@@ -27,7 +28,6 @@ const createPost = async (req, res) => {
             )
         })
     } catch (err) {
-        console.log(err);
         internalServerError(res)
     }
 }
@@ -35,6 +35,40 @@ const createPost = async (req, res) => {
 const getAllPosts = async (req, res) => {
     try {
         const response = await postDB.aggregate([
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "posted_by",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },{
+                $lookup: {
+                    from: "comments",
+                    localField: "_id",
+                    foreignField: "post_id",
+                    as: "comments"
+                }
+            },{
+                $sort: {
+                    createdAt:-1
+                }
+            }
+        ])
+        res.status(200).json({result: response})
+    } catch (err) {
+        internalServerError(res)
+    }
+}
+
+const getSinglePost = async (req, res) => {
+    try {
+        const response = await postDB.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(req.params.post_id)
+                }
+            },
             {
                 $lookup: {
                     from: "users",
@@ -148,7 +182,6 @@ const likePost = async (req, res) => {
         const result = await postDB.findOne({ _id: post_id })
         res.status(200).json({result: result})
     } catch (err) {
-        console.log(err);
         internalServerError(res)
     }
 }
@@ -165,7 +198,6 @@ const savePost = async (req, res) => {
         const result = await postDB.findOne({ _id: post_id })
         res.status(200).json({result: result})
     } catch (err) {
-        console.log(err);
         internalServerError(res)
     }
 }
@@ -173,7 +205,7 @@ const savePost = async (req, res) => {
 const deletePost = async (req, res) => {
     try {
         const { type, post_id, unique_id } = req.params
-        console.log(await cloudinaryDelete([unique_id], type));
+        await cloudinaryDelete([unique_id], type)
         await postDB.deleteOne({ _id: new mongoose.Types.ObjectId(post_id) })
         res.status(200).json({message: "Post deleted"})
     } catch (err) {
@@ -187,7 +219,7 @@ const getSavedPosts = async (req, res) => {
         const response = await postDB.findOne({ saved: new mongoose.Types.ObjectId(id) })
         res.status(200).json({result: response})
     } catch (err) {
-        internalServerError(err)
+        internalServerError(res)
     }
 }
 
@@ -215,7 +247,7 @@ const comments = async (req, res) => {
         )
         res.status(200).json({result: response})
     } catch (err) {
-        internalServerError(err)
+        internalServerError(res)
     }
 }
 
@@ -244,7 +276,7 @@ const addComment = async (req, res) => {
         )
         res.status(200).json({result: response})
     } catch (err) {
-        internalServerError(err)
+        internalServerError(res)
     }
 }
 
@@ -260,29 +292,8 @@ const likeComment = async (req, res) => {
         const result = await commentDB.findOne({ _id: comment_id })
         res.status(200).json({result: result})
     } catch (err) {
-        console.log(err);
         internalServerError(res)
     }
-}
-
-
-
-
-
-const createError = (res, status, message) => {
-    res.status(status).json(
-        {
-            message: message
-        }
-    )
-}
-
-const internalServerError = (res) => {
-    res.status(500).json(
-        {
-            message: "Internal server error"
-        }
-    )
 }
 
 export default {
@@ -296,5 +307,6 @@ export default {
     getSavedPosts,
     comments,
     addComment,
-    likeComment
+    likeComment,
+    getSinglePost
 }

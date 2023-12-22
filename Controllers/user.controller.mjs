@@ -5,6 +5,7 @@ import env from "dotenv"
 import mongoose from "mongoose"
 import {v4 as uuidv4} from "uuid"
 import { cloudinaryUpload } from "../Utils/Cloudinary.mjs"
+import { createError, internalServerError } from "../Utils/Errors.mjs"
 
 env.config()
 
@@ -76,7 +77,6 @@ const signupUser = async (req, res) => {
             }
         }
     } catch (err) {
-        console.log(err);
         internalServerError(res)
     }
 }
@@ -174,27 +174,31 @@ const getSuggestions = async (req, res) => {
     try {
         const { user_id } = req.params
         const findFollowers = await userDB.findOne({_id: user_id})
-        const response = await userDB.find({_id: { $in: findFollowers.followers }})
+        let response = await userDB.find({ _id: { $in: findFollowers.followers } })
+        response = response.filter(item => !item.followers.includes(user_id))
         res.status(200).json({result: response})
     } catch (err) {
         internalServerError(res)
     }
 }
 
-const createError = (res, status, message) => {
-    res.status(status).json(
-        {
-            message: message
+const follow = async (req, res) => {
+    try {
+        const { user_id, to_id } = req.body
+        const mydb = await userDB.findOne({ _id: new mongoose.Types.ObjectId(user_id), following: new mongoose.Types.ObjectId(to_id) })
+        const todb = await userDB.findOne({ _id: new mongoose.Types.ObjectId(to_id), followers: new mongoose.Types.ObjectId(user_id) })
+        if (!mydb && !todb) {
+            await userDB.updateOne({ _id: new mongoose.Types.ObjectId(user_id) }, { $push: { following: new mongoose.Types.ObjectId(to_id) } })
+            await userDB.updateOne({ _id: new mongoose.Types.ObjectId(to_id) }, { $push: { followers: new mongoose.Types.ObjectId(user_id) } })
+        } else {
+            await userDB.updateOne({ _id: new mongoose.Types.ObjectId(user_id) }, { $pull: { following: new mongoose.Types.ObjectId(to_id) } })
+            await userDB.updateOne({ _id: new mongoose.Types.ObjectId(to_id) }, { $pull: { followers: new mongoose.Types.ObjectId(user_id) } })
         }
-    )
-}
-
-const internalServerError = (res) => {
-    res.status(500).json(
-        {
-            message: "Internal server error"
-        }
-    )
+        const result = await userDB.findOne({ _id: new mongoose.Types.ObjectId(user_id) })
+        res.status(200).json({ following: result.following })
+    } catch (err) {
+        internalServerError(res)
+    }
 }
 
 export default {
@@ -203,5 +207,6 @@ export default {
     getUsers,
     getMe,
     profileEdit,
-    getSuggestions
+    getSuggestions,
+    follow
 }
