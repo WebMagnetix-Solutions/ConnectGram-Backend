@@ -13,7 +13,7 @@ export const Authentication = async (req, res, next) => {
             const auth = jwt.verify(token?.split(" ")[1],process.env.JWT_KEY)
             const now = Math.floor(new Date().getTime() / 1000)
             if(auth.exp <= now){
-                return createError(res, 401, "Unauthorized!")
+                return createError(res, 401, "Unauthorized!") 
             }else{
                 next()
             }

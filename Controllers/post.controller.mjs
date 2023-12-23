@@ -170,6 +170,44 @@ const getMyPosts = async (req, res) => {
     }
 }
 
+const getPostByUsername = async (req, res) => {
+    try {
+        const { username } = req.query
+        const finduserid = await userDB.findOne({ username: username })
+        if (!finduserid) {
+            return createError(res, 404, "Something error happend")
+        }
+        const response = await postDB.aggregate([
+            {
+                $match: {
+                    posted_by: new mongoose.Types.ObjectId(finduserid._id)
+                }
+            },{
+                $lookup: {
+                    from: "users",
+                    localField: "posted_by",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },{
+                $lookup: {
+                    from: "comments",
+                    localField: "_id",
+                    foreignField: "post_id",
+                    as: "comments"
+                }
+            },{
+                $sort: {
+                    createdAt:-1
+                }
+            }
+        ])
+        res.status(200).json({result: response})
+    } catch (err) {
+        internalServerError(res)
+    }
+}
+
 const likePost = async (req, res) => {
     try {
         const {post_id, user_id} = req.body
@@ -332,5 +370,6 @@ export default {
     comments,
     addComment,
     likeComment,
-    getSinglePost
+    getSinglePost,
+    getPostByUsername
 }

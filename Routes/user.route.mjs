@@ -8,6 +8,7 @@ app.post("/signup", userController.signupUser)
 app.get("/login", userController.userLogin)
 app.get("/users", Authentication, userController.getUsers)
 app.get("/getMe/:id", Authentication, userController.getMe)
+app.get("/user", Authentication, userController.getUserByUsername)
 app.patch("/profile/edit", Authentication, userController.profileEdit)
 
 app.get("/suggestions/:user_id", Authentication, userController.getSuggestions)

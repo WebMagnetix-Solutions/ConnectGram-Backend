@@ -132,6 +132,31 @@ const getMe = async (req, res) => {
     }
 }
 
+const getUserByUsername = async (req, res) => {
+    try {
+        const { username } = req.query
+        const result = await userDB.aggregate(
+            [
+                {
+                    $match: {
+                        username: username
+                    }
+                }, {
+                    $lookup: {
+                        from: "posts",
+                        localField: "_id",
+                        foreignField: "posted_by",
+                        as: "posts"
+                    }
+                }
+            ]
+        )
+        res.status(200).json({result: result[0]})
+    } catch (err) {
+        internalServerError(res)
+    }
+}
+
 const profileEdit = async (req, res) => {
     try {
         const { id, ...rest } = req.body
@@ -215,5 +240,6 @@ export default {
     getMe,
     profileEdit,
     getSuggestions,
-    follow
+    follow,
+    getUserByUsername
 }
