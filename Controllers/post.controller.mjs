@@ -215,8 +215,32 @@ const deletePost = async (req, res) => {
 
 const getSavedPosts = async (req, res) => {
     try {
-        const { id } = req.params
-        const response = await postDB.findOne({ saved: new mongoose.Types.ObjectId(id) })
+        const {id} = req.params
+        const response = await postDB.aggregate([
+            {
+                $match: {
+                    saved: new mongoose.Types.ObjectId(id)
+                }
+            },{
+                $lookup: {
+                    from: "users",
+                    localField: "posted_by",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },{
+                $lookup: {
+                    from: "comments",
+                    localField: "_id",
+                    foreignField: "post_id",
+                    as: "comments"
+                }
+            },{
+                $sort: {
+                    createdAt:-1
+                }
+            }
+        ])
         res.status(200).json({result: response})
     } catch (err) {
         internalServerError(res)
