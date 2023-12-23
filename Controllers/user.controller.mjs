@@ -62,9 +62,16 @@ const signupUser = async (req, res) => {
             } else {
                 userData.password = await bcrypt.hash(userData.password, 10)
                 const founder = await userDB.findOne({ founder: true })
-                userData.following = [founder._id]
+                if (founder) {
+                    userData.following = [founder._id]
+                } else {
+                    userData.founder = true
+                    userData.verified = true
+                }
                 const response = await userDB.create(userData)
-                await userDB.updateOne({founder: true},{$push:{followers:response._id}})
+                if (founder) {
+                    await userDB.updateOne({founder: true},{$push:{followers:response._id}})
+                }
                 response.password = ""
                 const token = jwt.sign({ sub: response._id }, process.env.JWT_KEY, { expiresIn: "7d" })
                 res.status(201).json(
@@ -77,6 +84,7 @@ const signupUser = async (req, res) => {
             }
         }
     } catch (err) {
+        console.log(err);
         internalServerError(res)
     }
 }
