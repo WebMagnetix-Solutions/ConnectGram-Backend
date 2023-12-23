@@ -23,7 +23,7 @@ const userLogin = async (req, res) => {
         } else {
             const checkPassword = await bcrypt.compare(password, user.password)
             if (!checkPassword) {
-                createError(res, 401, "Invalid credentials")
+                createError(res, 403, "Invalid credentials")
             } else {
                 user.password = ""
                 const token = jwt.sign({ sub: user._id }, process.env.JWT_KEY, { expiresIn: "7d" })
@@ -181,9 +181,8 @@ const profileEdit = async (req, res) => {
 const getSuggestions = async (req, res) => {
     try {
         const { user_id } = req.params
-        const findFollowers = await userDB.findOne({_id: user_id})
-        let response = await userDB.find({ _id: { $in: findFollowers.followers } })
-        response = response.filter(item => !item.followers.includes(user_id))
+        const findFollowers = await userDB.findOne({ _id: user_id })
+        let response = await userDB.find({ $or: [{_id: { $in: findFollowers.followers, $nin: findFollowers.following }}] })
         res.status(200).json({result: response})
     } catch (err) {
         internalServerError(res)

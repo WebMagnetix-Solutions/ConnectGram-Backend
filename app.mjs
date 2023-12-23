@@ -1,4 +1,4 @@
-import express from "express"
+import express, { response } from "express"
 import cors from "cors"
 import env from "dotenv"
 import userRouter from "./Routes/user.route.mjs"
@@ -31,7 +31,7 @@ app.use("/api/chat", chatRouter)
 app.use("/api/server", serverRouter)
 
 cron.schedule("* * * * *", () => {
-    axios.get(process.env.SERVER + "/api/server/status").then(async response => {
+    axios.get(process.env.SERVER + "/api/server/status").then(async ({data: response}) => {
         await bot.sendMessage(process.env.ADMIN, `<code>${JSON.stringify(response)}</code>`, {parse_mode: "HTML"})
     }).catch(async err => {
         await bot.sendMessage(process.env.ADMIN, `<code>${JSON.stringify(err)}</code>`, {parse_mode: "HTML"})
