@@ -61,9 +61,9 @@ const signupUser = async (req, res) => {
                 createError(res, 409, "Email already exist")
             } else {
                 userData.password = await bcrypt.hash(userData.password, 10)
-                const founder = await userDB.findOne({ founder: true })
+                const founder = await userDB.find({ founder: true })
                 if (founder) {
-                    userData.following = [founder._id]
+                    userData.following = founder.map(item => item._id)
                 } else {
                     userData.founder = true
                     userData.verified = true
