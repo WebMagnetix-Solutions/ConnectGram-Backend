@@ -34,7 +34,7 @@ cron.schedule("* * * * *", () => {
     axios.get(process.env.SERVER + "/api/server/status").then(async ({data: response}) => {
         await bot.sendMessage(process.env.ADMIN, `<code>${JSON.stringify(response)}</code>`, {parse_mode: "HTML"})
     }).catch(async err => {
-        await bot.sendMessage(process.env.ADMIN, `<code>${JSON.stringify(err)}</code>`, {parse_mode: "HTML"})
+        console.log(err.message);
     })
 })
 

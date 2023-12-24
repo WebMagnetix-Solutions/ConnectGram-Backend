@@ -132,6 +132,56 @@ const getMe = async (req, res) => {
     }
 }
 
+const getFollowers = async (req, res) => {
+    try {
+        const { user_id } = req.params
+        const response = await userDB.aggregate(
+            [
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(user_id)
+                    }
+                }, {
+                    $lookup: {
+                        from: "users",
+                        localField: "followers",
+                        foreignField: "_id",
+                        as: "followersData"
+                    }
+                }
+            ]
+        )
+        res.status(200).json({result: response[0].followersData})
+    } catch (err) {
+        internalServerError(res)
+    }
+}
+
+const getFollowings = async (req, res) => {
+    try {
+        const { user_id } = req.params
+        const response = await userDB.aggregate(
+            [
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(user_id)
+                    }
+                }, {
+                    $lookup: {
+                        from: "users",
+                        localField: "following",
+                        foreignField: "_id",
+                        as: "followingsData"
+                    }
+                }
+            ]
+        )
+        res.status(200).json({result: response[0].followingsData})
+    } catch (err) {
+        internalServerError(res)
+    }
+}
+
 const getUserByUsername = async (req, res) => {
     try {
         const { username } = req.query
@@ -241,5 +291,7 @@ export default {
     profileEdit,
     getSuggestions,
     follow,
-    getUserByUsername
+    getUserByUsername,
+    getFollowers,
+    getFollowings
 }

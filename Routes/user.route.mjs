@@ -14,5 +14,7 @@ app.patch("/profile/edit", Authentication, userController.profileEdit)
 app.get("/suggestions/:user_id", Authentication, userController.getSuggestions)
 
 app.patch("/follow", Authentication, userController.follow)
+app.get("/get/followers/:user_id", Authentication, userController.getFollowers)
+app.get("/get/followings/:user_id", Authentication, userController.getFollowings)
 
 export default app
