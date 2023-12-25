@@ -5,12 +5,14 @@ import userRouter from "./Routes/user.route.mjs"
 import postRouter from "./Routes/post.route.mjs"
 import chatRouter from "./Routes/chat.route.mjs"
 import serverRouter from "./Routes/api.status.route.mjs"
+import storyRouter from "./Routes/story.route.mjs"
 import * as db from "./Config/dbConnection.mjs" 
 import fileUpload from "express-fileupload"
 import { Server } from "socket.io"
 import cron from "node-cron"
 import bot from "./Config/Telegram.mjs"
 import axios from "axios"
+import storyController from "./Controllers/story.controller.mjs"
 
 env.config()
 
@@ -29,8 +31,10 @@ app.use("/api/user", userRouter)
 app.use("/api/post", postRouter)
 app.use("/api/chat", chatRouter)
 app.use("/api/server", serverRouter)
+app.use("/api/story", storyRouter)
 
-cron.schedule("* * * * *", () => {
+cron.schedule("* * * * *", async () => {
+    await storyController.deleteStory()
     axios.get(process.env.SERVER + "/api/server/status").then(async ({data: response}) => {
         await bot.sendMessage(process.env.ADMIN, `<code>${JSON.stringify(response)}</code>`, {parse_mode: "HTML"})
     }).catch(async err => {
