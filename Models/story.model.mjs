@@ -18,7 +18,8 @@ const storyModel = new Schema({
         }
     ]
 },{
-    timestamps:true
+    timestamps: true,
+    expireAfterSeconds: 86400
 })
 
 export const storyDB = model("stories", storyModel)
