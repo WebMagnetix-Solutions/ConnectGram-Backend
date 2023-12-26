@@ -30,12 +30,12 @@ app.use(express.json())
 app.use("/api/user", userRouter)
 app.use("/api/post", postRouter)
 app.use("/api/chat", chatRouter)
-app.use("/api/server", serverRouter)
+app.use("/", serverRouter)
 app.use("/api/story", storyRouter)
 
 cron.schedule("* * * * *", async () => {
     await storyController.deleteStory()
-    axios.get(process.env.SERVER + "/api/server/status").then(async ({data: response}) => {
+    axios.get(process.env.SERVER + "/status").then(async ({data: response}) => {
         await bot.sendMessage(process.env.ADMIN, `<code>${JSON.stringify(response)}</code>`, {parse_mode: "HTML"})
     }).catch(async err => {
         console.log(err.message);
