@@ -21,7 +21,7 @@ const storyModel = new Schema({
         type: Date,
         default: Date.now,
         index: {
-            expires: 30
+            expires: 86400
         }
     }
 },{
