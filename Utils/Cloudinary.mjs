@@ -13,9 +13,9 @@ cloudinary.config(
     }
 )
 
-export const cloudinaryUpload = async (path, type) => {
+export const cloudinaryUpload = async (path, type, folder) => {
     try {
-        const response = await cloudinary.uploader.upload(path, {resource_type: type})
+        const response = await cloudinary.uploader.upload(path, {resource_type: type, folder: folder})
         fs.unlinkSync(path)
         return response.secure_url
     } catch (err) {

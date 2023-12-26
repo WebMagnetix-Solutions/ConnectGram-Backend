@@ -224,7 +224,7 @@ const profileEdit = async (req, res) => {
             const file_id = uuidv4()
             file.mv(`./Public/Images/${file_id}.${ext}`, async (err, resp) => {
                 if (err) createError(res, 500, "Internal server error")
-                const response = await cloudinaryUpload(`./Public/Images/${file_id}.${ext}`, file_type)
+                const response = await cloudinaryUpload(`./Public/Images/${file_id}.${ext}`, file_type, "USERS")
                 rest.pic = response
                 await userDB.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: rest })
             })

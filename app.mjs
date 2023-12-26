@@ -12,7 +12,6 @@ import { Server } from "socket.io"
 import cron from "node-cron"
 import bot from "./Config/Telegram.mjs"
 import axios from "axios"
-import storyController from "./Controllers/story.controller.mjs"
 
 env.config()
 
@@ -34,7 +33,6 @@ app.use("/", serverRouter)
 app.use("/api/story", storyRouter)
 
 cron.schedule("* * * * *", async () => {
-    await storyController.deleteStory()
     axios.get(process.env.SERVER + "/status").then(async ({data: response}) => {
         await bot.sendMessage(process.env.ADMIN, `<code>${JSON.stringify(response)}</code>`, {parse_mode: "HTML"})
     }).catch(async err => {

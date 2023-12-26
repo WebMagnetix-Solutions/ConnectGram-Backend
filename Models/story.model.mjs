@@ -16,10 +16,16 @@ const storyModel = new Schema({
         {
             type: Types.ObjectId
         }
-    ]
+    ],
+    expireAt: {
+        type: Date,
+        default: Date.now,
+        index: {
+            expires: 30
+        }
+    }
 },{
-    timestamps: true,
-    expireAfterSeconds: 86400
+    timestamps: true
 })
 
 export const storyDB = model("stories", storyModel)

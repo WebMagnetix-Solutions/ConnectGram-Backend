@@ -15,7 +15,7 @@ const createPost = async (req, res) => {
         const file_id = uuidv4()
         file.mv(`./Public/Images/${file_id}.${ext}`, async (err, resp) => {
             if (err) createError(res, 500, "Internal server error")
-            const response = await cloudinaryUpload(`./Public/Images/${file_id}.${ext}`, file_type)
+            const response = await cloudinaryUpload(`./Public/Images/${file_id}.${ext}`, file_type, "POSTS")
             postData.url = response
             postData.type = file_type
             postData.tags = postData.tags.split(",")
@@ -243,7 +243,7 @@ const savePost = async (req, res) => {
 const deletePost = async (req, res) => {
     try {
         const { type, post_id, unique_id } = req.params
-        await cloudinaryDelete([unique_id], type)
+        await cloudinaryDelete([`POSTS/${unique_id}`], type)
         await postDB.deleteOne({ _id: new mongoose.Types.ObjectId(post_id) })
         res.status(200).json({message: "Post deleted"})
     } catch (err) {
