@@ -10,6 +10,10 @@ const userModel = new Schema(
             type: Boolean,
             default: false
         },
+        valid_user: {
+            type: Boolean,
+            default: false
+        },
         verified: {
             type: Boolean,
             default: false

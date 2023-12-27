@@ -224,6 +224,17 @@ const likePost = async (req, res) => {
     }
 }
 
+const addView = async (req, res) => {
+    try {
+        const {post_id, user_id} = req.body
+        await postDB.updateOne({ _id: new mongoose.Types.ObjectId(post_id) }, { $addToSet: { views: new mongoose.Types.ObjectId(user_id) } })
+        const result = await postDB.findOne({ _id: post_id })
+        res.status(200).json({result: result.views})
+    } catch (err) {
+        internalServerError(res)
+    }
+}
+
 const savePost = async (req, res) => {
     try {
         const {post_id, user_id} = req.body
@@ -363,6 +374,7 @@ export default {
     getAllPosts,
     getMyPosts,
     likePost,
+    addView,
     deletePost,
     getFollowingPost,
     savePost,

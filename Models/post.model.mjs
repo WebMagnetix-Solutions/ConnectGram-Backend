@@ -30,6 +30,11 @@ const postModel = new Schema(
                 type: mongoose.Types.ObjectId
             } 
         ],
+        views: [
+            {
+                type: mongoose.Types.ObjectId
+            }  
+        ],
         location: {
             type: String,
             required: false

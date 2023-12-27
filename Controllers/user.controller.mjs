@@ -6,6 +6,7 @@ import mongoose from "mongoose"
 import {v4 as uuidv4} from "uuid"
 import { cloudinaryUpload } from "../Utils/Cloudinary.mjs"
 import { createError, internalServerError } from "../Utils/Errors.mjs"
+import { sendVerificationLink } from "../Utils/Email.mjs"
 
 env.config()
 
@@ -25,15 +26,19 @@ const userLogin = async (req, res) => {
             if (!checkPassword) {
                 createError(res, 403, "Invalid credentials")
             } else {
-                user.password = ""
-                const token = jwt.sign({ sub: user._id }, process.env.JWT_KEY, { expiresIn: "7d" })
-                res.status(201).json(
-                    {
-                        message: "User data fetched",
-                        token: token,
-                        user: user
-                    }
-                )
+                if (!user.valid_user) {
+                    createError(res, 404, "Email verification is pending!")
+                } else {
+                    user.password = ""
+                    const token = jwt.sign({ sub: user._id }, process.env.JWT_KEY, { expiresIn: "7d" })
+                    res.status(201).json(
+                        {
+                            message: "User data fetched",
+                            token: token,
+                            user: user
+                        }
+                    )
+                }
             }
         }
     } catch (err) {
@@ -69,16 +74,17 @@ const signupUser = async (req, res) => {
                     userData.verified = true
                 }
                 const response = await userDB.create(userData)
-                if (founder) {
+                if (founder.length>0) {
                     await userDB.updateOne({founder: true},{$push:{followers:response._id}})
                 }
-                response.password = ""
-                const token = jwt.sign({ sub: response._id }, process.env.JWT_KEY, { expiresIn: "7d" })
-                res.status(201).json(
+                const mailResponse = await sendVerificationLink(response.email, response._id)
+                if (!mailResponse) {
+                    return createError(res, 503, "Mailing failed. Contact @thenamevishnu")
+                }
+                res.status(200).json(
                     {
-                        message: "New user created",
-                        token: token,
-                        user: response
+                        message: "Verification mail sent to " + response.email,
+                        result: "success"
                     }
                 )
             }
@@ -86,6 +92,33 @@ const signupUser = async (req, res) => {
     } catch (err) {
         console.log(err);
         internalServerError(res)
+    }
+}
+
+const validUser = async (req, res) => {
+    try {
+        const { id } = req.params
+        const response = await userDB.findOne(
+            {
+                _id: id
+            }
+        )
+        if (!response) {
+            createError(res, 404, "user not found!")
+        } else {
+            if (!response.valid_user) {
+                const resData = await userDB.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: { valid_user: true } })
+                if (resData?.modifiedCount > 0) {
+                    res.status(200).json({message: "You're now a valid user", result: true})
+                } else {
+                    createError(res, 404, "user not found!")
+                }
+            } else {
+                createError(res, 409, "Already verified")
+            }
+        }
+    } catch (err) {
+        createError(res, 404, "Not found!")
     }
 }
 
@@ -293,5 +326,6 @@ export default {
     follow,
     getUserByUsername,
     getFollowers,
-    getFollowings
+    getFollowings,
+    validUser
 }

@@ -6,6 +6,7 @@ const app = Router()
 
 app.post("/signup", userController.signupUser)
 app.get("/login", userController.userLogin)
+app.get("/valid/:id", userController.validUser)
 app.get("/users", Authentication, userController.getUsers)
 app.get("/getMe/:id", Authentication, userController.getMe)
 app.get("/user", Authentication, userController.getUserByUsername)

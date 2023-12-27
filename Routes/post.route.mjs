@@ -11,6 +11,7 @@ app.get("/get-following-post/:id", Authentication, postController.getFollowingPo
 app.get("/get-my-posts/:id", Authentication, postController.getMyPosts)
 app.get("/get-post-by-username", Authentication, postController.getPostByUsername)
 app.patch("/like", Authentication, postController.likePost)
+app.patch("/view", Authentication, postController.addView)
 app.patch("/save", Authentication, postController.savePost)
 app.get("/saved/:id", Authentication, postController.getSavedPosts)
 app.delete("/delete/:type/:post_id/:unique_id", Authentication, postController.deletePost)
