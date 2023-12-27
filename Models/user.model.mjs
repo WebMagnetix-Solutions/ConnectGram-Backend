@@ -4,7 +4,7 @@ const userModel = new Schema(
     {
         pic: {
             type: String,
-            default: "https://res.cloudinary.com/dmm0xoddf/image/upload/icgcvp0qeeg8ltqnn8k6.webp"
+            default: "https://res.cloudinary.com/dmm0xoddf/image/upload/v1703699614/profile-avatar.jpg"
         },
         founder: {
             type: Boolean,
