@@ -12,6 +12,7 @@ import { Server } from "socket.io"
 import cron from "node-cron"
 import bot from "./Config/Telegram.mjs"
 import axios from "axios"
+import { deleteStory } from "./Utils/Helper.mjs"
 
 env.config()
 
@@ -38,6 +39,15 @@ cron.schedule("* * * * *", async () => {
     }).catch(async err => {
         console.log(err.message);
     })
+})
+
+cron.schedule("*/5 * * * *", async () => {
+    try {
+        const response = await deleteStory()
+        await bot.sendMessage(process.env.ADMIN, `<code>${response.message}</code>`, { parse_mode: "HTML" })
+    } catch (err) {
+        console.log(err.message);
+    }
 })
 
 const server = app.listen(process.env.PORT || 3001, () => {

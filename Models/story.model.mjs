@@ -18,11 +18,8 @@ const storyModel = new Schema({
         }
     ],
     expireAt: {
-        type: Date,
-        default: Date.now,
-        index: {
-            expires: 86400
-        }
+        type: Number,
+        default: new Date().getTime() + 86400*1000
     }
 },{
     timestamps: true
