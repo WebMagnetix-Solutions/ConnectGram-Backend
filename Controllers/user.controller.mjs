@@ -266,27 +266,44 @@ const profileEdit = async (req, res) => {
                 const response = await cloudinaryUpload(`./Public/Images/${file_id}.${ext}`, file_type, "USERS")
                 rest.pic = response
                 await userDB.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: rest })
+                const result = await userDB.aggregate(
+                    [
+                        {
+                            $match: {
+                                _id: new mongoose.Types.ObjectId(id)
+                            }
+                        }, {
+                            $lookup: {
+                                from: "posts",
+                                localField: "_id",
+                                foreignField: "posted_by",
+                                as: "posts"
+                            }
+                        }
+                    ]
+                )
+                res.status(200).json({result: result[0]})
             })
         } else {
-            await userDB.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: rest })   
+            await userDB.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: rest }) 
+            const result = await userDB.aggregate(
+                [
+                    {
+                        $match: {
+                            _id: new mongoose.Types.ObjectId(id)
+                        }
+                    }, {
+                        $lookup: {
+                            from: "posts",
+                            localField: "_id",
+                            foreignField: "posted_by",
+                            as: "posts"
+                        }
+                    }
+                ]
+            )
+            res.status(200).json({result: result[0]})
         }
-        const result = await userDB.aggregate(
-            [
-                {
-                    $match: {
-                        _id: new mongoose.Types.ObjectId(id)
-                    }
-                }, {
-                    $lookup: {
-                        from: "posts",
-                        localField: "_id",
-                        foreignField: "posted_by",
-                        as: "posts"
-                    }
-                }
-            ]
-        )
-        res.status(200).json({result: result[0]})
     } catch (err) {
         internalServerError(res)
     }
