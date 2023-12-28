@@ -4,9 +4,10 @@ import bcrypt from "bcrypt"
 import env from "dotenv"
 import mongoose from "mongoose"
 import {v4 as uuidv4} from "uuid"
-import { cloudinaryUpload } from "../Utils/Cloudinary.mjs"
+import { cloudinaryDelete, cloudinaryUpload } from "../Utils/Cloudinary.mjs"
 import { createError, internalServerError } from "../Utils/Errors.mjs"
 import { sendVerificationLink } from "../Utils/Email.mjs"
+import { getPostUniqueId } from "../Utils/Helper.mjs"
 
 env.config()
 
@@ -250,6 +251,7 @@ const profileEdit = async (req, res) => {
     try {
         const { id, ...rest } = req.body
         const fileBlob = req.files
+        const findPic = await userDB.findOne({ _id: id })
         if (rest.username) {
             const findUser = await userDB.findOne({ username: rest.username })
             if (findUser) {
@@ -263,6 +265,8 @@ const profileEdit = async (req, res) => {
             const file_id = uuidv4()
             file.mv(`./Public/Images/${file_id}.${ext}`, async (err, resp) => {
                 if (err) createError(res, 500, "Internal server error")
+                const uid = getPostUniqueId(findPic.pic) 
+                await cloudinaryDelete([uid], "image")
                 const response = await cloudinaryUpload(`./Public/Images/${file_id}.${ext}`, file_type, "USERS")
                 rest.pic = response
                 await userDB.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: rest })
