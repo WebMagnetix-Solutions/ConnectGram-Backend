@@ -13,6 +13,8 @@ import cron from "node-cron"
 import bot from "./Config/Telegram.mjs"
 import axios from "axios"
 import { deleteStory } from "./Utils/Helper.mjs"
+import { userDB } from "./Models/user.model.mjs"
+import { newMessageMail } from "./Utils/Email.mjs"
 
 env.config()
 
@@ -72,6 +74,12 @@ io.on("connection", (socket) => {
         if (!chat.users) { console.log("not defined!"); return }
         chat.users.forEach(user => {
             if (user != messageData.sender._id) {
+                userDB.findOne({ _id: user }).then(response => {
+                    const email = response.email
+                    const name = messageData.sender.name
+                    const pic = messageData.sender.pic
+                    newMessageMail(email, name, pic).then(resData => console.log(resData))
+                })
                 socket.in(user).emit("ReceivedMessage",messageData)
             }
         })
