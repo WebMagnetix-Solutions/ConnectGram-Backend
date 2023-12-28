@@ -159,6 +159,9 @@ const getMe = async (req, res) => {
                 }
             ]
         )
+        if (result.length === 0) {
+            return createError(res, 404, "User not found!")
+        }
         res.status(200).json({result: result[0]})
     } catch (err) {
         internalServerError(res)
@@ -234,6 +237,9 @@ const getUserByUsername = async (req, res) => {
                 }
             ]
         )
+        if (result.length === 0) {
+            return createError(res, 404, "User not found!")
+        }
         res.status(200).json({result: result[0]})
     } catch (err) {
         internalServerError(res)
