@@ -43,7 +43,7 @@ cron.schedule("* * * * *", async () => {
     })
 })
 
-cron.schedule("*/5 * * * *", async () => {
+cron.schedule("* * * * *", async () => {
     try {
         const response = await deleteStory()
         await bot.sendMessage(process.env.ADMIN, `<code>${response.message}</code>`, { parse_mode: "HTML" })
