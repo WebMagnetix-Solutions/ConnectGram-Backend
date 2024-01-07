@@ -37,7 +37,7 @@ app.use("/api/story", storyRouter)
 
 cron.schedule("* * * * *", async () => {
     axios.get(process.env.SERVER + "/status").then(async ({data: response}) => {
-        await bot.sendMessage(process.env.ADMIN, `<code>${JSON.stringify(response)}</code>`, {parse_mode: "HTML"})
+        console.log(response);
     }).catch(async err => {
         console.log(err.message);
     })
@@ -46,7 +46,7 @@ cron.schedule("* * * * *", async () => {
 cron.schedule("* * * * *", async () => {
     try {
         const response = await deleteStory()
-        await bot.sendMessage(process.env.ADMIN, `<code>${response.message}</code>`, { parse_mode: "HTML" })
+        console.log(response.message);
     } catch (err) {
         console.log(err.message);
     }
